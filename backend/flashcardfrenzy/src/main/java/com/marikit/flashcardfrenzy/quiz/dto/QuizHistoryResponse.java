@@ -1,17 +1,17 @@
-package com.marikit.flashcardfrenzy.auth.dto;
+package com.marikit.flashcardfrenzy.quiz.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
+public class QuizHistoryResponse {
 
-    private UserResponse user;
-    private String token;
-    private String refreshToken;
+    private List<QuizHistoryItem> results;
 }

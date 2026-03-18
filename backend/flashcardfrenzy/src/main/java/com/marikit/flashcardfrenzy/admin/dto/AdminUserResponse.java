@@ -1,0 +1,24 @@
+package com.marikit.flashcardfrenzy.admin.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AdminUserResponse {
+
+    private UUID id;
+    private String email;
+    private String fullName;
+    private String role;
+    private String status;
+    private long deckCount;
+    private LocalDateTime createdAt;
+}

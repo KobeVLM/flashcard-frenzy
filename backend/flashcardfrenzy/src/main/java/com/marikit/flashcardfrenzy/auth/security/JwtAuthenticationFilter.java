@@ -23,8 +23,9 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final JsonMapper jsonMapper;
 
     @Override
@@ -43,12 +44,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
 
         try {
-            final String userEmail = jwtService.extractEmail(jwt);
+            // Check if token is blacklisted
+            if (tokenBlacklistService.isBlacklisted(jwt)) {
+                writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        "AUTH-001", "Token has been invalidated");
+                return;
+            }
+
+            final String userEmail = jwtUtil.extractEmail(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (jwtUtil.validateToken(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -58,25 +66,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (ExpiredJwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            ApiResponse<Object> errorResponse = ApiResponse.error(
-                    "AUTH-002",
-                    "Token expired",
-                    null);
-            response.getWriter().write(jsonMapper.writeValueAsString(errorResponse));
+            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "AUTH-002", "Token expired");
             return;
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            ApiResponse<Object> errorResponse = ApiResponse.error(
-                    "AUTH-001",
-                    "Invalid credentials",
-                    null);
-            response.getWriter().write(jsonMapper.writeValueAsString(errorResponse));
+            writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "AUTH-001", "Invalid token");
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeErrorResponse(HttpServletResponse response, int status,
+                                     String errorCode, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        ApiResponse<Object> errorResponse = ApiResponse.error(errorCode, message, null);
+        response.getWriter().write(jsonMapper.writeValueAsString(errorResponse));
     }
 }

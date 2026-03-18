@@ -1,0 +1,460 @@
+{
+  "info": {
+    "_postman_id": "1114070f-7227-4e2f-b236-88997533f1e7",
+    "name": "Flashcard Frenzy API Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "deckId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cardId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.success && jsonData.data) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+                  "    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"kobe@example.com\",\n  \"fullName\": \"Kobe\",\n  \"password\": \"Kobe2024!\",\n  \"confirmPassword\": \"Kobe2024!\"\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.success && jsonData.data) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+                  "    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"kobe@example.com\",\n  \"password\": \"Kobe2024!\"\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.success && jsonData.data) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+                  "    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Decks",
+      "item": [
+        {
+          "name": "Create Deck",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.success && jsonData.data) {",
+                  "    pm.collectionVariables.set(\"deckId\", jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Java Basics\",\n  \"description\": \"Core concepts of Java 21\",\n  \"category\": \"Programming\"\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/decks",
+              "host": ["{{baseUrl}}"],
+              "path": ["decks"]
+            }
+          }
+        },
+        {
+          "name": "Get Decks (List)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/decks?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["decks"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Deck by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/decks/{{deckId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["decks", "{{deckId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Deck (PATCH)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Core concepts of Java 21 (Updated)\"\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/decks/{{deckId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["decks", "{{deckId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Deck",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/decks/{{deckId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["decks", "{{deckId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Flashcards",
+      "item": [
+        {
+          "name": "Add Card to Deck",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.success && jsonData.data) {",
+                  "    pm.collectionVariables.set(\"cardId\", jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is a Record in Java?\",\n  \"answer\": \"A special class acting as a transparent carrier for immutable data.\",\n  \"tags\": [\"java\", \"records\", \"basic\"]\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/decks/{{deckId}}/cards",
+              "host": ["{{baseUrl}}"],
+              "path": ["decks", "{{deckId}}", "cards"]
+            }
+          }
+        },
+        {
+          "name": "Get Cards for Deck",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/decks/{{deckId}}/cards",
+              "host": ["{{baseUrl}}"],
+              "path": ["decks", "{{deckId}}", "cards"]
+            }
+          }
+        },
+        {
+          "name": "Update Card (PATCH)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tags\": [\"java\", \"records\", \"advanced\"]\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cards/{{cardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["cards", "{{cardId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Card",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cards/{{cardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["cards", "{{cardId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Quizzes",
+      "item": [
+        {
+          "name": "Submit Quiz Result",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deckId\": \"{{deckId}}\",\n  \"score\": 85,\n  \"timeSpent\": 120,\n  \"results\": [\n    {\n      \"cardId\": \"{{cardId}}\",\n      \"userAnswer\": \"A data transparency class\",\n      \"correct\": true\n    }\n  ]\n}",
+              "options": {
+                 "raw": { "language": "json" }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quizzes/results",
+              "host": ["{{baseUrl}}"],
+              "path": ["quizzes", "results"]
+            }
+          }
+        },
+        {
+          "name": "Get Quiz History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quizzes/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["quizzes", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Admin",
+      "item": [
+        {
+          "name": "Get Admin Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

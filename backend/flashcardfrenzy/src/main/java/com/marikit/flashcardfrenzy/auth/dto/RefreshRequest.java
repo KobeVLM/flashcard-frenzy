@@ -1,5 +1,6 @@
 package com.marikit.flashcardfrenzy.auth.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,9 +10,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
+public class RefreshRequest {
 
-    private UserResponse user;
-    private String token;
+    @NotBlank(message = "Refresh token is required")
     private String refreshToken;
 }
