@@ -1,193 +1,269 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/errorMessages';
-import { AxiosError } from 'axios';
-import type { ApiResponse } from '../api/authService';
 
-// ─── Validation helpers ───────────────────────────────────────────────────────
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-interface FieldErrors {
-    email?: string;
-    password?: string;
-}
-
-function validateLogin(email: string, password: string): FieldErrors {
-    const errors: FieldErrors = {};
-    if (!email.trim()) {
-        errors.email = 'Email is required.';
-    } else if (!EMAIL_REGEX.test(email)) {
-        errors.email = 'Please enter a valid email address.';
-    }
-    if (!password) {
-        errors.password = 'Password is required.';
-    }
-    return errors;
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
+type FormMode = 'login' | 'register';
 
 export default function LoginPage() {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const { login } = useAuth();
+  const [mode, setMode] = useState<FormMode>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-    const [apiError, setApiError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setFullName('');
+    setConfirmPassword('');
+    setError('');
+    setFieldErrors({});
+  };
 
-    // Show session-expired message if redirected with ?expired=true
-    const sessionExpired = searchParams.get('expired') === 'true';
+  const toggleMode = () => {
+    setMode(mode === 'login' ? 'register' : 'login');
+    resetForm();
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setApiError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setFieldErrors({});
+    setLoading(true);
 
-        // Client-side validation (VALID-001)
-        const errors = validateLogin(email, password);
-        setFieldErrors(errors);
-        if (Object.keys(errors).length > 0) return;
-
-        setLoading(true);
-        try {
-            const response = await login(email, password);
-            if (response.success) {
-                navigate('/dashboard', { replace: true });
-            } else {
-                // Shouldn't normally reach here — errors throw via axios
-                const code = response.error?.code;
-                setApiError(getErrorMessage(code));
-            }
-        } catch (err) {
-            const axiosErr = err as AxiosError<ApiResponse>;
-            const code = axiosErr.response?.data?.error?.code;
-            setApiError(getErrorMessage(code));
-        } finally {
-            setLoading(false);
+    try {
+      if (mode === 'login') {
+        const response = await login(email, password);
+        if (response.success) {
+          navigate('/dashboard');
+        } else {
+          const code = response.error?.code;
+          if (code === 'VALID-001' && typeof response.error?.details === 'object' && response.error.details) {
+            setFieldErrors(response.error.details as Record<string, string>);
+          } else {
+            setError(getErrorMessage(code));
+          }
         }
-    };
+      } else {
+        if (password !== confirmPassword) {
+          setFieldErrors({ confirmPassword: 'Passwords do not match.' });
+          setLoading(false);
+          return;
+        }
+        const response = await register(fullName, email, password, confirmPassword);
+        if (response.success) {
+          navigate('/dashboard');
+        } else {
+          const code = response.error?.code;
+          if (code === 'VALID-001' && typeof response.error?.details === 'object' && response.error.details) {
+            setFieldErrors(response.error.details as Record<string, string>);
+          } else {
+            setError(getErrorMessage(code));
+          }
+        }
+      }
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { error?: { code?: string; details?: Record<string, string> } } } };
+      const code = axiosError?.response?.data?.error?.code;
+      if (code === 'VALID-001' && axiosError?.response?.data?.error?.details) {
+        setFieldErrors(axiosError.response.data.error.details);
+      } else {
+        setError(getErrorMessage(code));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-12">
-            {/* Decorative blobs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            </div>
-
-            <div className="relative w-full max-w-md">
-                {/* Logo / Brand */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-extrabold text-white tracking-tight">
-                        ⚡ <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Flashcard Frenzy</span>
-                    </h1>
-                    <p className="mt-2 text-slate-400 text-sm">Sign in to continue learning</p>
-                </div>
-
-                {/* Card */}
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8">
-                    {/* Session expired banner */}
-                    {sessionExpired && (
-                        <div className="mb-5 rounded-lg bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-amber-300 text-sm flex items-center gap-2">
-                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Session expired, please log in again.
-                        </div>
-                    )}
-
-                    {/* API error banner */}
-                    {apiError && (
-                        <div className="mb-5 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-300 text-sm flex items-center gap-2 animate-[fadeIn_0.2s_ease-out]">
-                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {apiError}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} noValidate className="space-y-5">
-                        {/* Email */}
-                        <div>
-                            <label htmlFor="login-email" className="block text-sm font-medium text-slate-300 mb-1.5">
-                                Email address
-                            </label>
-                            <input
-                                id="login-email"
-                                type="email"
-                                autoComplete="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className={`w-full rounded-lg bg-white/5 border ${fieldErrors.email ? 'border-red-500' : 'border-white/10'
-                                    } px-4 py-3 text-white placeholder-slate-500 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30`}
-                                placeholder="you@example.com"
-                            />
-                            {fieldErrors.email && (
-                                <p className="mt-1.5 text-sm text-red-400 animate-[fadeIn_0.2s_ease-out]">
-                                    {fieldErrors.email}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Password */}
-                        <div>
-                            <label htmlFor="login-password" className="block text-sm font-medium text-slate-300 mb-1.5">
-                                Password
-                            </label>
-                            <input
-                                id="login-password"
-                                type="password"
-                                autoComplete="current-password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className={`w-full rounded-lg bg-white/5 border ${fieldErrors.password ? 'border-red-500' : 'border-white/10'
-                                    } px-4 py-3 text-white placeholder-slate-500 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30`}
-                                placeholder="••••••••"
-                            />
-                            {fieldErrors.password && (
-                                <p className="mt-1.5 text-sm text-red-400 animate-[fadeIn_0.2s_ease-out]">
-                                    {fieldErrors.password}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Submit */}
-                        <button
-                            id="login-submit"
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/25"
-                        >
-                            {loading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                    </svg>
-                                    Signing in…
-                                </span>
-                            ) : (
-                                'Sign in'
-                            )}
-                        </button>
-                    </form>
-
-                    {/* Register link */}
-                    <p className="mt-6 text-center text-sm text-slate-400">
-                        Don't have an account?{' '}
-                        <Link
-                            to="/register"
-                            className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
-                        >
-                            Create one
-                        </Link>
-                    </p>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left panel - branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gray-900 text-white flex-col justify-center px-16 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-500 blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-purple-500 blur-3xl"></div>
         </div>
-    );
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+              <span className="material-icons text-white">style</span>
+            </div>
+            <span className="text-xl font-bold">Flashcard Frenzy</span>
+          </div>
+          <h2 className="text-4xl font-bold mb-4 leading-tight">
+            Master your studies,<br />one card at a time.
+          </h2>
+          <p className="text-gray-400 text-lg leading-relaxed max-w-md">
+            Create, study, and test yourself with smart flashcards. Track your progress and build lasting knowledge.
+          </p>
+          <div className="mt-12 grid grid-cols-3 gap-6 max-w-sm">
+            <div>
+              <p className="text-2xl font-bold text-indigo-400">10K+</p>
+              <p className="text-xs text-gray-500 mt-1">Active Learners</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-indigo-400">500K+</p>
+              <p className="text-xs text-gray-500 mt-1">Cards Created</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-indigo-400">95%</p>
+              <p className="text-xs text-gray-500 mt-1">Retention Rate</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel - form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+              <span className="material-icons text-white">style</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900">Flashcard Frenzy</span>
+          </div>
+
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+          </h1>
+          <p className="text-gray-500 mb-8">
+            {mode === 'login'
+              ? 'Master your studies, one card at a time.'
+              : 'Start your learning journey today.'}
+          </p>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600 flex items-center gap-2">
+                <span className="material-icons text-sm">error</span>
+                {error}
+              </p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {mode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                  className={`w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                    fieldErrors.fullName ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                />
+                {fieldErrors.fullName && (
+                  <p className="mt-1 text-xs text-red-500">{fieldErrors.fullName}</p>
+                )}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className={`w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                  fieldErrors.email ? 'border-red-300' : 'border-gray-200'
+                }`}
+              />
+              {fieldErrors.email && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === 'login' ? 'Enter your password' : 'Minimum 8 characters'}
+                  required
+                  minLength={8}
+                  className={`w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition pr-12 ${
+                    fieldErrors.password ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <span className="material-icons text-xl">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              {fieldErrors.password && (
+                <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>
+              )}
+            </div>
+
+            {mode === 'register' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat your password"
+                  required
+                  minLength={8}
+                  className={`w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                    fieldErrors.confirmPassword ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                />
+                {fieldErrors.confirmPassword && (
+                  <p className="mt-1 text-xs text-red-500">{fieldErrors.confirmPassword}</p>
+                )}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {loading && (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              )}
+              {mode === 'login' ? 'Sign In' : 'Create Account'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-gray-500">
+            {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+            <button
+              onClick={toggleMode}
+              className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
+            >
+              {mode === 'login' ? 'Sign up for free' : 'Log in here'}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
