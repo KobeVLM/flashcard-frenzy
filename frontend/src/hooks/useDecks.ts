@@ -13,7 +13,7 @@ export function useDecks() {
     try {
       const response = await deckService.getDecks(search);
       if (response.success && response.data) {
-        setDecks(response.data);
+        setDecks(response.data.decks ?? []);
       } else {
         setError(response.error?.message ?? 'Failed to load decks.');
       }

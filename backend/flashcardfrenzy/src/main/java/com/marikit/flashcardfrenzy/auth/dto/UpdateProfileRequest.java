@@ -5,18 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResponse {
+public class UpdateProfileRequest {
 
-    private UUID id;
-    private String email;
     private String firstName;
     private String lastName;
-    private String profilePhotoUrl;
-    private String role;
 }

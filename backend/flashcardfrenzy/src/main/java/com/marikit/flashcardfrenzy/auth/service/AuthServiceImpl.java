@@ -50,7 +50,8 @@ public class AuthServiceImpl implements AuthService {
         User user = User.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .role(Role.USER)
                 .status("ACTIVE")
                 .build();
@@ -154,7 +155,9 @@ public class AuthServiceImpl implements AuthService {
         UserResponse userResponse = UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .fullName(user.getFullName())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .profilePhotoUrl(user.getProfilePhotoUrl())
                 .role(user.getRole().name())
                 .build();
 

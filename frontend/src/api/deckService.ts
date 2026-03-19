@@ -1,10 +1,20 @@
 import client from './client';
 import type { ApiResponse, Deck, CreateDeckPayload, UpdateDeckPayload } from '../types';
 
-export async function getDecks(search?: string): Promise<ApiResponse<Deck[]>> {
+interface DeckListResponse {
+  decks: Deck[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export async function getDecks(search?: string): Promise<ApiResponse<DeckListResponse>> {
   const params: Record<string, string> = {};
   if (search) params.search = search;
-  const response = await client.get<ApiResponse<Deck[]>>('/decks', { params });
+  const response = await client.get<ApiResponse<DeckListResponse>>('/decks', { params });
   return response.data;
 }
 

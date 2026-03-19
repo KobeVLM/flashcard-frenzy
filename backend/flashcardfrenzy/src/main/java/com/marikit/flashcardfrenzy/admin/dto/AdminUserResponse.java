@@ -16,7 +16,8 @@ public class AdminUserResponse {
 
     private UUID id;
     private String email;
-    private String fullName;
+    private String firstName;
+    private String lastName;
     private String role;
     private String status;
     private long deckCount;
