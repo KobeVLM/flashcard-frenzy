@@ -24,6 +24,14 @@ export function Sidebar() {
     navigate('/login');
   };
 
+  const initials =
+    (user?.firstName?.charAt(0) ?? '').toUpperCase() +
+    (user?.lastName?.charAt(0) ?? '').toUpperCase() || 'U';
+
+  const displayName = user
+    ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'User'
+    : 'User';
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-gray-300 flex flex-col z-40">
       {/* Logo */}
@@ -80,11 +88,19 @@ export function Sidebar() {
       {/* User + Logout */}
       <div className="px-3 py-4 border-t border-gray-800">
         <div className="flex items-center gap-3 px-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold">
-            {user?.fullName?.charAt(0)?.toUpperCase() ?? 'U'}
-          </div>
+          {user?.profilePhotoUrl ? (
+            <img
+              src={user.profilePhotoUrl}
+              alt="Avatar"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold">
+              {initials}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{user?.fullName ?? 'User'}</p>
+            <p className="text-sm font-medium text-white truncate">{displayName}</p>
             <p className="text-xs text-gray-500 truncate">{user?.email}</p>
           </div>
         </div>

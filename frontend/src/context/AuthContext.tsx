@@ -12,7 +12,8 @@ interface AuthContextType {
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<ApiResponse<AuthData>>;
   register: (
-    fullName: string,
+    firstName: string,
+    lastName: string,
     email: string,
     password: string,
     confirmPassword: string
@@ -68,13 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (
-      fullName: string,
+      firstName: string,
+      lastName: string,
       email: string,
       password: string,
       confirmPassword: string
     ) => {
       const response = await authService.register({
-        fullName,
+        firstName,
+        lastName,
         email,
         password,
         confirmPassword,

@@ -6,7 +6,7 @@ export async function getProfile(): Promise<ApiResponse<User>> {
   return response.data;
 }
 
-export async function updateProfile(payload: { fullName?: string; email?: string }): Promise<ApiResponse<User>> {
+export async function updateProfile(payload: { firstName?: string; lastName?: string }): Promise<ApiResponse<User>> {
   const response = await client.patch<ApiResponse<User>>('/auth/me', payload);
   return response.data;
 }
@@ -17,5 +17,14 @@ export async function changePassword(payload: {
   confirmPassword: string;
 }): Promise<ApiResponse<null>> {
   const response = await client.post<ApiResponse<null>>('/auth/change-password', payload);
+  return response.data;
+}
+
+export async function uploadPhoto(file: File): Promise<ApiResponse<User>> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await client.post<ApiResponse<User>>('/auth/me/photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 }

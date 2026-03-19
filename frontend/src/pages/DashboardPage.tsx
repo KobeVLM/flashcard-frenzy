@@ -27,7 +27,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.fullName?.split(' ')[0] ?? 'Scholar'}
+          Welcome back, {user?.firstName ?? 'Scholar'}
         </h2>
         <p className="text-gray-500 mt-1">
           You have {totalCards} cards across {decks.length} decks. Ready to start?

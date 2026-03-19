@@ -106,10 +106,10 @@ export default function AdminPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-sm font-semibold">
-                            {u.fullName?.charAt(0)?.toUpperCase() ?? 'U'}
+                            {(u.firstName?.charAt(0) ?? '').toUpperCase()}{(u.lastName?.charAt(0) ?? '').toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{u.fullName}</p>
+                            <p className="text-sm font-medium text-gray-900">{u.firstName} {u.lastName}</p>
                             <p className="text-xs text-gray-400">{u.email}</p>
                           </div>
                         </div>

@@ -18,7 +18,9 @@ export interface ApiResponse<T = unknown> {
 export interface User {
   id: string;
   email: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  profilePhotoUrl?: string | null;
   role: 'USER' | 'ADMIN';
 }
 
@@ -34,7 +36,8 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -121,7 +124,8 @@ export interface AdminStats {
 export interface AdminUser {
   id: string;
   email: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   role: 'USER' | 'ADMIN';
   createdAt: string;
   updatedAt: string;

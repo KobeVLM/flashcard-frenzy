@@ -9,7 +9,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<FormMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -21,7 +22,8 @@ export default function LoginPage() {
   const resetForm = () => {
     setEmail('');
     setPassword('');
-    setFullName('');
+    setFirstName('');
+    setLastName('');
     setConfirmPassword('');
     setError('');
     setFieldErrors({});
@@ -57,7 +59,7 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
-        const response = await register(fullName, email, password, confirmPassword);
+        const response = await register(firstName, lastName, email, password, confirmPassword);
         if (response.success) {
           navigate('/dashboard');
         } else {
@@ -151,22 +153,41 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {mode === 'register' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-                <input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
-                  required
-                  className={`w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
-                    fieldErrors.fullName ? 'border-red-300' : 'border-gray-200'
-                  }`}
-                />
-                {fieldErrors.fullName && (
-                  <p className="mt-1 text-xs text-red-500">{fieldErrors.fullName}</p>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+                  <input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="First name"
+                    required
+                    className={`w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                      fieldErrors.firstName ? 'border-red-300' : 'border-gray-200'
+                    }`}
+                  />
+                  {fieldErrors.firstName && (
+                    <p className="mt-1 text-xs text-red-500">{fieldErrors.firstName}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Last name"
+                    required
+                    className={`w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${
+                      fieldErrors.lastName ? 'border-red-300' : 'border-gray-200'
+                    }`}
+                  />
+                  {fieldErrors.lastName && (
+                    <p className="mt-1 text-xs text-red-500">{fieldErrors.lastName}</p>
+                  )}
+                </div>
               </div>
             )}
 
